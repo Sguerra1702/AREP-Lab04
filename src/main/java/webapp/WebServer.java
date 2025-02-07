@@ -25,14 +25,27 @@ public class WebServer {
         return instance;
     }
 
+    /**
+     * Registra una ruta GET.
+     * @param path la ruta.
+     * @param handler el manejador de la ruta.
+     */
     public static void get(String path, BiFunction<Request, Response, String> handler) {
         getRoutes.put(path, handler);
     }
 
+    /**
+     * Establece la carpeta de archivos estáticos.
+     * @param directory la carpeta de archivos estáticos.
+     */
     public static void staticfiles(String directory) {
         staticFilesDir = directory;
     }
 
+    /**
+     * Inicia el servidor en el puerto 35000.
+     * @throws IOException si ocurre un error al iniciar el servidor.
+     */
     public void start() throws IOException {
         ServerSocket server = null;
         try {
@@ -59,13 +72,17 @@ public class WebServer {
         server.close();
     }
 
+    /**
+     * Procesa la solicitud del cliente.
+     * @param client el socket del cliente.
+     */
     private void handleRequest(Socket client) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
              OutputStream out = client.getOutputStream()) {
 
             String line;
             boolean firstline = true;
-            String query = "/home.html"; // Por defecto, servirá home.html
+            String query = "/home.html";
 
             Request request = null;
             Response response = new Response();
@@ -73,8 +90,6 @@ public class WebServer {
             while ((line = in.readLine()) != null) {
                 if (firstline) {
                     String requestPath = line.split(" ")[1];
-
-                    // Redirigir '/' o '/app' a '/app/home.html'
                     if (requestPath.equals("/") || requestPath.equals("/app")) {
                         query = "/home.html";
                     } else if (requestPath.startsWith("/app")) {
@@ -94,13 +109,11 @@ public class WebServer {
             }
 
             if (request != null && getRoutes.containsKey(request.getPath())) {
-                // Es una ruta REST
                 String responseBody = getRoutes.get(request.getPath()).apply(request, response);
                 String header = "HTTP/1.1 " + response.getStatusCode() + " OK\r\n" +
                         "Content-Type: " + response.getContentType() + "\r\n\r\n";
                 out.write((header + responseBody).getBytes());
             } else {
-                // Servir archivo estático
                 processResource(out, query);
             }
 
@@ -109,6 +122,11 @@ public class WebServer {
         }
     }
 
+    /**
+     * Procesa un recurso estático.
+     * @param out el flujo de salida.
+     * @param recurso el recurso solicitado.
+     */
     private void processResource(OutputStream out, String recurso) {
         WebService service = WebService.getInstance();
         try {
