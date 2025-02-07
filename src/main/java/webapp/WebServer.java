@@ -2,22 +2,35 @@ package webapp;
 
 import java.io.*;
 import java.net.*;
-import java.util.Arrays;
-
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.BiFunction;
+import webapp.services.Request;
+import webapp.services.Response;
 import webapp.services.WebService;
 
 /**
- * Servidor HTTP que atiende solicitudes REST.
+ * Servidor HTTP que atiende solicitudes REST y archivos estáticos.
  */
 public class WebServer {
 
     private static WebServer instance;
+    private static Map<String, BiFunction<Request, Response, String>> getRoutes = new HashMap<>();
+    private static String staticFilesDir = "src/main/resources"; // Carpeta por defecto
 
     public static WebServer getInstance() {
         if (instance == null) {
             instance = new WebServer();
         }
         return instance;
+    }
+
+    public static void get(String path, BiFunction<Request, Response, String> handler) {
+        getRoutes.put(path, handler);
+    }
+
+    public static void staticfiles(String directory) {
+        staticFilesDir = directory;
     }
 
     public void start() throws IOException {
@@ -48,10 +61,14 @@ public class WebServer {
 
     private void handleRequest(Socket client) {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-            OutputStream out = client.getOutputStream()) {
-            String line, respuesta = "";
+             OutputStream out = client.getOutputStream()) {
+
+            String line;
             boolean firstline = true;
             String query = "/home.html"; // Por defecto, servirá home.html
+
+            Request request = null;
+            Response response = new Response();
 
             while ((line = in.readLine()) != null) {
                 if (firstline) {
@@ -65,6 +82,10 @@ public class WebServer {
                     } else {
                         query = requestPath;
                     }
+
+                    // Crear objeto Request
+                    request = new Request(requestPath);
+
                     firstline = false;
                 }
                 if (!in.ready()) {
@@ -72,19 +93,27 @@ public class WebServer {
                 }
             }
 
-            respuesta = processResource(out, query);
-
+            if (request != null && getRoutes.containsKey(request.getPath())) {
+                // Es una ruta REST
+                String responseBody = getRoutes.get(request.getPath()).apply(request, response);
+                String header = "HTTP/1.1 " + response.getStatusCode() + " OK\r\n" +
+                        "Content-Type: " + response.getContentType() + "\r\n\r\n";
+                out.write((header + responseBody).getBytes());
+            } else {
+                // Servir archivo estático
+                processResource(out, query);
+            }
 
         } catch (IOException e) {
             System.err.println("Error al procesar la solicitud: " + e.getMessage());
         }
     }
 
-    private String processResource(OutputStream out, String recurso) {
+    private void processResource(OutputStream out, String recurso) {
         WebService service = WebService.getInstance();
         try {
             String tipo = recurso.contains(".") ? recurso.split("\\.")[1] : "html";
-            String ruta = "src/main/resources/" + recurso;
+            String ruta = staticFilesDir + recurso;
 
             if (tipo.equals("png") || tipo.equals("jpg") || tipo.equals("jpeg") || tipo.equals("gif")) {
                 byte[] resource = service.getBinaryResource(ruta);
@@ -98,13 +127,12 @@ public class WebServer {
             }
         } catch (RuntimeException | IOException e) {
             String header = service.getHeader("html", "404 Not Found");
-            String resource = service.getResource("src/main/resources/404.html");
+            String resource = service.getResource(staticFilesDir + "/404.html");
             try {
                 out.write((header + resource).getBytes());
             } catch (IOException ex) {
                 System.err.println("Error al escribir la respuesta: " + ex.getMessage());
             }
         }
-        return recurso;
     }
 }
