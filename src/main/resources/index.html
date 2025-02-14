@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bienvenido al Servidor Web</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+            text-align: center;
+        }
+        .container {
+            max-width: 800px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #555;
+        }
+        .endpoint {
+            background: #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        a {
+            color: #007BFF;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚀 Bienvenido al Servidor Web</h1>
+    <p>Este servidor permite acceder a archivos estáticos y manejar rutas dinámicas.</p>
+
+    <h2>📌 Cómo acceder a los recursos:</h2>
+
+    <div class="endpoint">
+        <strong>📄 Página de inicio:</strong> <br>
+        <a href="/">/home</a>
+    </div>
+
+    <div class="endpoint">
+        <strong>📂 Archivos estáticos:</strong> <br>
+        Para acceder a un archivo, usa: <br>
+        <code></code> <br>
+        Ejemplo: <a href="/home.html">/home.html</a>
+    </div>
+
+    <div class="endpoint">
+        <strong>🖼️ Imágenes y binarios:</strong> <br>
+        Puedes acceder a imágenes y archivos binarios directamente. <br>
+        Ejemplo: <a href="/404.png">/404.png</a>
+    </div>
+
+    <div class="endpoint">
+        <strong>❌ Página de error 404:</strong> <br>
+        Si un recurso no existe, se mostrará la página 404. <br>
+        Prueba: <a href="/404.html">/no-existe</a>
+    </div>
+
+    <h2>🛠️ Sobre el servidor</h2>
+    <p>Este servidor web ha sido desarrollado con soporte para rutas dinámicas y archivos estáticos.</p>
+</div>
+
+</body>
+</html>

@@ -1,25 +1,33 @@
 package webapp.services;
 
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
+
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Request {
-    private String path;
-    private Map<String, String> queryParams = new HashMap<>();
+    private final String path;
+    private final Map<String, String> queryParams = new HashMap<>();
 
-    public Request(String url) {
-        if (url.contains("?")) {
-            String[] parts = url.split("\\?");
-            this.path = parts[0];
-            String[] params = parts[1].split("&");
+    public Request(String path, String query) {
+        this.path = path;
+
+        if (!query.isEmpty()) { // Procesar parámetros solo si existen
+            String[] params = query.split("&");
             for (String param : params) {
-                String[] keyValue = param.split("=");
+                String[] keyValue = param.split("=", 2);
                 if (keyValue.length == 2) {
-                    queryParams.put(keyValue[0], keyValue[1]);
+                    queryParams.put(
+                            URLDecoder.decode(keyValue[0], StandardCharsets.UTF_8),
+                            URLDecoder.decode(keyValue[1], StandardCharsets.UTF_8)
+                    );
                 }
             }
-        } else {
-            this.path = url;
         }
     }
 
@@ -28,6 +36,8 @@ public class Request {
     }
 
     public String getValues(String key) {
-        return queryParams.getOrDefault(key, null);
+        return queryParams.getOrDefault(key, ""); // Retorna vacío si el parámetro no existe
     }
 }
+
+
